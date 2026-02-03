@@ -1,4 +1,4 @@
-import { FIELD_WIDTH_YARDS, TOTAL_LENGTH_YARDS, YARD_TO_PX } from '@/components/Field';
+import { S as YARD_TO_PX, FIELD_WIDTH_YARDS, TOTAL_H as TOTAL_LENGTH_YARDS, clampPoint } from '@/lib/constants';
 import type { Point } from '@/types';
 
 export type RoutePreset =
@@ -9,7 +9,8 @@ export type RoutePreset =
     | 'post'
     | 'corner'
     | 'go'
-    | 'comeback';
+    | 'comeback'
+    | 'cross';
 
 export const ROUTE_PRESETS: { label: string; value: RoutePreset }[] = [
     { label: 'Stop', value: 'hitch' },
@@ -20,6 +21,7 @@ export const ROUTE_PRESETS: { label: string; value: RoutePreset }[] = [
     { label: 'Go', value: 'go' },
     { label: 'Comeback', value: 'comeback' },
     { label: 'Corner', value: 'corner' },
+    { label: 'Cross', value: 'cross' },
 ];
 
 export const generateRoutePoints = (start: Point, preset: RoutePreset): Point[] => {
@@ -47,23 +49,27 @@ export const generateRoutePoints = (start: Point, preset: RoutePreset): Point[] 
     // Helper to add point relative to LAST point
     const addRel = (dxYards: number, dyYards: number) => {
         const last = points[points.length - 1];
-        points.push({
+        points.push(clampPoint({
             x: last.x + (dxYards * S),
             y: last.y - (dyYards * S) // Y is inverted in SVG
-        });
+        }));
     };
 
     // Helper to add point at ABSOLUTE yards gained depth, but relative/absolute X
     // Uses last X as base, adds dxYards. Sets Y to exact yard line.
     const addAbsDepth = (dxYards: number, depthYards: number) => {
         const last = points[points.length - 1];
-        points.push({
+        points.push(clampPoint({
             x: last.x + (dxYards * S),
             y: getY(depthYards)
-        });
+        }));
     };
 
     switch (preset) {
+        case 'cross':
+            addAbsDepth(0, 1);
+            addRel(20 * dirIn, 3);
+            break;
         case 'hitch':
             // Go to 5 yards depth directly
             addAbsDepth(0, 6);
@@ -99,10 +105,10 @@ export const generateRoutePoints = (start: Point, preset: RoutePreset): Point[] 
             // actually comeback is usually back towards LOS (+Y in svg).
             // addRel dy is "yards UP field". So -2 is back.
             const last = points[points.length - 1];
-            points.push({
+            points.push(clampPoint({
                 x: last.x + (2 * dirOut * S),
                 y: last.y + (2 * S) // +Y is down (back towards LOS)
-            });
+            }));
             break;
     }
 

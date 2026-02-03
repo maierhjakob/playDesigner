@@ -20,6 +20,7 @@ export type Player = {
     color: string;
     position: Point;
     routes: RouteSegment[];
+    motion?: Point | null;
 };
 
 export type Play = {

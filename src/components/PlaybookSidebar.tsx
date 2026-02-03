@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, Save, FolderOpen, MousePointer2 } from 'lucide-react';
+import { Plus, Trash2, Save, FolderOpen, MousePointer2, Copy, MoveRight } from 'lucide-react';
 import { ROUTE_PRESETS } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import type { Play, Player } from '@/types';
@@ -12,6 +12,7 @@ interface PlaybookSidebarProps {
     onNewPlay: () => void;
     onSavePlay: () => void;
     onDeletePlay: (id: string) => void;
+    onUpdatePlayName: (id: string, name: string) => void;
     onStartDrawing: (type: 'primary' | 'option' | 'check' | 'endzone') => void;
     onClearRoutes: () => void;
     onAddPlayer: () => void;
@@ -19,10 +20,17 @@ interface PlaybookSidebarProps {
     onSetFormation: (type: 'strong-left' | 'strong-right') => void;
     onSetPosition: (role: string) => void;
     onApplyRoute: (preset: any) => void;
+    onExportPlaybook: () => void;
+    onImportPlaybook: (file: File) => void;
+    onCopyPlay: (id: string) => void;
     activeRouteType: 'primary' | 'option' | 'check' | 'endzone';
     onSetActiveRouteType: (type: 'primary' | 'option' | 'check' | 'endzone') => void;
     isDrawing: boolean;
     onFinishDrawing: () => void;
+    // Motion props
+    isSettingMotion: boolean;
+    onSetMotionMode: () => void;
+    onClearMotion: () => void;
     className?: string;
 }
 
@@ -34,6 +42,7 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
     onNewPlay,
     onSavePlay,
     onDeletePlay,
+    onUpdatePlayName,
     onStartDrawing,
     onClearRoutes,
     onAddPlayer,
@@ -41,10 +50,14 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
     onSetFormation,
     onSetPosition,
     onApplyRoute,
+    onExportPlaybook,
+    onImportPlaybook,
+    onCopyPlay,
     activeRouteType,
     onSetActiveRouteType,
     isDrawing,
     onFinishDrawing,
+    onClearMotion,
     className
 }) => {
     return (
@@ -74,18 +87,51 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
                         )}
                     >
                         <span className="truncate font-medium text-sm">{play.name}</span>
-                        <span
-                            className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-1 transition-opacity z-10"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDeletePlay(play.id);
-                            }}
-                        >
-                            <Trash2 size={14} />
-                        </span>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onCopyPlay(play.id);
+                                }}
+                                className="p-1 hover:text-blue-400 text-slate-500 transition-colors"
+                                title="Duplicate Play"
+                            >
+                                <Copy size={14} />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Are you sure you want to delete "${play.name}"?`)) {
+                                        onDeletePlay(play.id);
+                                    }
+                                }}
+                                className="p-1 hover:text-red-400 text-slate-500 transition-colors"
+                                title="Delete Play"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
                     </button>
                 ))}
             </div>
+
+            {currentPlayId && (
+                <div className="p-4 bg-slate-800/20 border-t border-slate-700/50 space-y-2">
+                    <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">
+                        Play Settings
+                    </div>
+                    <div>
+                        <label className="text-[10px] text-slate-500 uppercase font-semibold">Play Name</label>
+                        <input
+                            type="text"
+                            value={plays.find(p => p.id === currentPlayId)?.name || ''}
+                            onChange={(e) => onUpdatePlayName(currentPlayId, e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                            placeholder="Enter play name..."
+                        />
+                    </div>
+                </div>
+            )}
 
             {selectedPlayer && (
                 <div className="p-4 bg-slate-800/50 border-t border-slate-700 space-y-3">
@@ -176,6 +222,75 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
                             <div className="text-[9px] text-slate-600 text-right pr-1">(+ Back)</div>
                         </div>
                     </div>
+
+                    {/* Motion Controls */}
+                    <div className="pt-2 border-t border-slate-700/50">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    if (selectedPlayer.motion) {
+                                        onClearMotion();
+                                    } else {
+                                        // Initialize motion at current position + offset (e.g. 2 yards right)
+                                        onUpdatePlayer(selectedPlayer.id, {
+                                            motion: { x: selectedPlayer.position.x + (2 * 25), y: selectedPlayer.position.y }
+                                        });
+                                    }
+                                }}
+                                className={cn(
+                                    "flex-1 py-1.5 px-2 rounded text-[10px] font-medium border transition-all flex items-center justify-center gap-1",
+                                    selectedPlayer.motion
+                                        ? "bg-red-900/20 text-red-400 border-red-900/30 hover:bg-red-900/40"
+                                        : "bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700"
+                                )}
+                            >
+                                {selectedPlayer.motion ? (
+                                    <><Trash2 size={12} /> Clear Motion</>
+                                ) : (
+                                    <><MoveRight size={12} /> Set Motion</>
+                                )}
+                            </button>
+                        </div>
+
+                        {selectedPlayer.motion && (
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div>
+                                    <label className="text-[10px] text-slate-500 uppercase font-semibold">Motion Align</label>
+                                    <input
+                                        type="number"
+                                        step="0.5"
+                                        value={(selectedPlayer.motion.x / 25 - 12.5).toFixed(1)}
+                                        onChange={(e) => {
+                                            const val = parseFloat(e.target.value) || 0;
+                                            const newX = (12.5 + val) * 25;
+                                            onUpdatePlayer(selectedPlayer.id, {
+                                                motion: { ...selectedPlayer.motion!, x: newX }
+                                            });
+                                        }}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] text-slate-500 uppercase font-semibold">Motion Depth</label>
+                                    <input
+                                        type="number"
+                                        step="0.5"
+                                        value={(selectedPlayer.motion.y / 25 - 20).toFixed(1)}
+                                        onChange={(e) => {
+                                            const val = parseFloat(e.target.value) || 0;
+                                            const newY = (20 + val) * 25;
+                                            onUpdatePlayer(selectedPlayer.id, {
+                                                motion: { ...selectedPlayer.motion!, y: newY }
+                                            });
+                                        }}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+
 
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700/50">
                         {/* Route Type Toggle */}
@@ -303,7 +418,29 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
                 >
                     <Save size={18} /> Save Changes
                 </button>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700/50">
+                    <button
+                        onClick={onExportPlaybook}
+                        className="bg-slate-800/50 hover:bg-slate-800 text-slate-400 py-2 px-2 rounded-md flex items-center justify-center gap-1.5 text-xs font-medium border border-slate-700/50 transition-all"
+                        title="Export Playbook to JSON"
+                    >
+                        Export
+                    </button>
+                    <label className="cursor-pointer bg-slate-800/50 hover:bg-slate-800 text-slate-400 py-2 px-2 rounded-md flex items-center justify-center gap-1.5 text-xs font-medium border border-slate-700/50 transition-all">
+                        Import
+                        <input
+                            type="file"
+                            accept=".json"
+                            className="hidden"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) onImportPlaybook(file);
+                            }}
+                        />
+                    </label>
+                </div>
             </div>
-        </div>
+        </div >
     );
 };
