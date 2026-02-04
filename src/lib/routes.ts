@@ -10,10 +10,11 @@ export type RoutePreset =
     | 'ir-in-5'
     | 'slant'
     | 'post'
+    | 'post-in'
+    | 'post-hook'
     | 'corner'
     | 'go'
     | 'comeback'
-    | 'post-in'
     | 'cross';
 
 export const ROUTE_PRESETS: { label: string; value: RoutePreset }[] = [
@@ -25,11 +26,12 @@ export const ROUTE_PRESETS: { label: string; value: RoutePreset }[] = [
     { label: '10-In', value: 'in-10' },
     { label: 'Slant', value: 'slant' },
     { label: 'Post', value: 'post' },
+    { label: 'PostIn', value: 'post-in' },
+    { label: 'PostHook', value: 'post-hook' },
     { label: 'Go', value: 'go' },
     { label: 'Comeback', value: 'comeback' },
     { label: 'Corner', value: 'corner' },
     { label: 'Cross', value: 'cross' },
-    { label: 'PostIn', value: 'post-in' },
 ];
 
 export const generateRoutePoints = (start: Point, preset: RoutePreset): Point[] => {
@@ -108,8 +110,13 @@ export const generateRoutePoints = (start: Point, preset: RoutePreset): Point[] 
             addRel(3 * dirIn, 2); // Diagonal
             break;
         case 'post':
-            addAbsDepth(0, 7); // Break at 7y (standard deep post break?)
+            addAbsDepth(0, 7); // Break at 7y
             addRel(5 * dirIn, 7); // Deep middle
+            break;
+        case 'post-hook':
+            addAbsDepth(0, 7); // Break at 7y 
+            addRel(3 * dirIn, 3);
+            addRel(1 * dirIn, -2);
             break;
         case 'post-in':
             addAbsDepth(0, 7);
