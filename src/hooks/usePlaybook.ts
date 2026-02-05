@@ -15,7 +15,7 @@ function migrateOldData(): Playbook[] {
 
         const defaultPlaybook: Playbook = {
             id: crypto.randomUUID(),
-            name: 'J1',
+            name: 'defaultPlaybook',
             plays,
             gridConfig: { columnNames },
             createdAt: Date.now(),
@@ -49,7 +49,7 @@ export function usePlaybook() {
         // Create default playbook
         return [{
             id: crypto.randomUUID(),
-            name: 'J1',
+            name: 'defaultPlaybook',
             plays: [],
             gridConfig: { columnNames: ['A', 'B', 'C', 'D', 'E'] },
             createdAt: Date.now(),
