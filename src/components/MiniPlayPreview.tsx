@@ -82,22 +82,17 @@ export const MiniPlayPreview: React.FC<MiniPlayPreviewProps> = ({
             {play.players.map(player => {
                 if (!player.motion) return null;
 
-                const offset = 25;
                 const startX = getX(player.position.x);
                 const startY = getY(player.position.y);
                 const endX = getX(player.motion.x);
                 const endY = getY(player.motion.y);
-
-                const startDipY = getY(player.position.y + offset);
-                const endDipY = getY(player.motion.y + offset);
 
                 return (
                     <polyline
                         key={`motion-${player.id}`}
                         points={[
                             `${startX},${startY}`,
-                            `${startX},${startDipY}`,
-                            `${endX},${endDipY}`,
+                            `${startX},${endY}`,
                             `${endX},${endY}`
                         ].join(' ')}
                         stroke={player.color}

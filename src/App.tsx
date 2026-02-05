@@ -252,12 +252,10 @@ function App() {
                   if (!player.motion) return null;
                   const start = player.position;
                   const end = player.motion;
-                  const offset = S; // 1 yard back 
-                  // U-shaped path back -> across -> forward
+                  // L-shaped path: Vertical to target depth, then horizontal to target alignment
                   const points = [
                     `${start.x},${start.y}`,
-                    `${start.x},${start.y + offset}`,
-                    `${end.x},${end.y + offset}`,
+                    `${start.x},${end.y}`,
                     `${end.x},${end.y}`
                   ].join(' ');
 

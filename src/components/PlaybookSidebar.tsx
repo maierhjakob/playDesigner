@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Trash2, Save, FolderOpen, MousePointer2, Copy, MoveRight } from 'lucide-react';
 import { ROUTE_PRESETS } from '@/lib/routes';
+import { getPos, S } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { Play, Player } from '@/types';
 
@@ -225,8 +226,17 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
                                             onClearMotion();
                                         } else {
                                             // Initialize motion at current position + offset (e.g. 2 yards right)
+                                            // Set default depth to 2 yards behind LOS
+                                            // Move "inside" (towards center line at 312.5px) by 2 yards
+                                            const defaultDepthPos = getPos(0, -2);
+                                            const CENTER_X = 312.5;
+                                            const xOffset = selectedPlayer.position.x < CENTER_X ? (2 * S) : -(2 * S);
+
                                             onUpdatePlayer(selectedPlayer.id, {
-                                                motion: { x: selectedPlayer.position.x + (2 * 25), y: selectedPlayer.position.y }
+                                                motion: {
+                                                    x: selectedPlayer.position.x + xOffset,
+                                                    y: defaultDepthPos.y
+                                                }
                                             });
                                         }
                                     }}
