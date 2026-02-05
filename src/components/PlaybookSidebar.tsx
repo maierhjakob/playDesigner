@@ -75,7 +75,7 @@ export const PlaybookSidebar: React.FC<PlaybookSidebarProps> = ({
                         className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                     >
                         <option value="" disabled>Select a play...</option>
-                        {plays.map((play) => (
+                        {[...plays].sort((a, b) => a.name.localeCompare(b.name)).map((play) => (
                             <option key={play.id} value={play.id}>
                                 {play.name}
                             </option>
